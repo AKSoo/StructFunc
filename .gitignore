@@ -1,3 +1,15 @@
+/PNC/atlas/
+/PNC/Dicom/
+/PNC/Nifti/
+/PNC/phenotype/
+
+/aws/
+/license.txt
+
+.jupyter/
+output/
+log/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
