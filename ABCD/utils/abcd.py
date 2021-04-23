@@ -2,8 +2,6 @@ import os
 import pandas as pd
 idx = pd.IndexSlice
 
-from statsmodels.tools import tools as sm_tools
-
 
 INDEX = ['src_subject_id', 'eventname']
 EVENTS = ['baseline_year_1_arm_1', '2_year_follow_up_y_arm_1']
@@ -28,7 +26,7 @@ FCON = {
 SCON_TEMPLATE = 'dmri_dtifa_fiberat_{0}'
 
 
-def load_data(abcd_path, data, include_rec=None, exclude_n=None):
+def load_data(abcd_path, data, dropna=False, include_rec=None, exclude_n=None):
     """
     Load a longitudinally ordered ABCD dataset.
     * fcon: Gordon network correlations
@@ -37,6 +35,7 @@ def load_data(abcd_path, data, include_rec=None, exclude_n=None):
     Params:
         abcd_path: ABCD dataset directory
         data: dataset to load
+        dropna: drop subject if any column is NA
         include_rec: [fcon, scon] Filter by recommended inclusion?
         exclude_n: [fcon] Ignore None "network"?
 
@@ -55,25 +54,6 @@ def load_data(abcd_path, data, include_rec=None, exclude_n=None):
     raw = pd.read_csv(os.path.join(abcd_path, filename), sep='\t',
                       skiprows=[1], index_col=INDEX)
     raw = raw.loc[~raw.index.duplicated(keep='last')]
-
-    # rows
-    if include_rec:
-        imgincl = pd.read_csv(os.path.join(abcd_path, 'abcd_imgincl01.tsv'), sep='\t',
-                              skiprows=[1], index_col=INDEX)
-        imgincl = imgincl.dropna(subset=['visit'])
-        imgincl = imgincl.loc[~imgincl.index.duplicated(keep='last')]
-
-        if data == 'fcon':
-            included = imgincl.loc[imgincl['imgincl_rsfmri_include'] == 1]
-        elif data == 'scon':
-            included = imgincl.loc[imgincl['imgincl_dmri_include'] == 1]
-        else:
-            raise ValueError('No recommended inclusion for ' + data)
-    else:
-        included = raw
-
-    subs_included = included.groupby(level='src_subject_id').size()
-    subs_long = subs_included.index[subs_included == len(EVENTS)]
 
     # columns
     if data == 'fcon':
@@ -95,6 +75,32 @@ def load_data(abcd_path, data, include_rec=None, exclude_n=None):
         columns = slice(None)
 
         extra_columns = []
+
+    raw_cols = raw.loc[:, columns]
+
+    # rows
+    if include_rec:
+        imgincl = pd.read_csv(os.path.join(abcd_path, 'abcd_imgincl01.tsv'), sep='\t',
+                              skiprows=[1], index_col=INDEX)
+        imgincl = imgincl.dropna(subset=['visit'])
+        imgincl = imgincl.loc[~imgincl.index.duplicated(keep='last')]
+
+        if data == 'fcon':
+            inclusion = imgincl.loc[imgincl['imgincl_rsfmri_include'] == 1].index
+        elif data == 'scon':
+            inclusion = imgincl.loc[imgincl['imgincl_dmri_include'] == 1].index
+        else:
+            raise ValueError('No recommended inclusion for ' + data)
+
+        included = raw_cols.loc[inclusion, :]
+    else:
+        included = raw_cols
+
+    if dropna:
+        included = included.dropna()
+
+    subs_included = included.groupby(level=0).size()
+    subs_long = subs_included.index[subs_included == len(EVENTS)]
 
     dataset = raw.loc[idx[subs_long, EVENTS], columns]
     extra = raw.loc[dataset.index, extra_columns]
@@ -143,38 +149,3 @@ def load_covariates(path, simple_race=False):
         covariates = covariates.drop('race.6level', axis=1)
 
     return covariates
-
-
-def confound_residuals(feature, model=None, regressors=None, groups=None, verbose=False,
-                       **kwargs):
-    """
-    Regress out confounds from a feature with a statsmodels model.
-
-    Params:
-        feature: Series
-        model: statsmodels model (OLS, MixedLM)
-        regressors: DataFrame
-        groups: Series, for mixed effects model
-        verbose: print model fit results?
-        **kwargs: passed to the model
-
-    Returns:
-        resid: Series, same index as feature
-    """
-    if model is None or regressors is None:
-        raise ValueError('Model or regressors not specified.')
-
-    # MixedLM(missing='drop') doesn't work
-    na_filter = feature.notna()
-    endog = feature.loc[na_filter]
-    exog = sm_tools.add_constant(pd.get_dummies(regressors, drop_first=True)).loc[na_filter]
-    if groups is not None:
-        groups = groups.loc[na_filter]
-
-    result = model(endog, exog, groups=groups, **kwargs).fit()
-
-    if verbose:
-        print(result.summary())
-    
-    resid = result.resid.reindex(feature.index)
-    return resid
