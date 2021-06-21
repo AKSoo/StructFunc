@@ -25,38 +25,41 @@ FCON = {
 
 SCON_TEMPLATE = 'dmri_dtifa_fiberat_{0}'
 
+SCAN_INFO = ['mri_info_manufacturer', 'mri_info_manufacturersmn',
+             'mri_info_deviceserialnumber', 'mri_info_softwareversion']
 
-def load_data(abcd_path, data, dropna=False, include_rec=None, exclude_n=None):
+
+def load_mri_data(abcd_path, data_type, dropna=False, include_rec=True, exclude_n=True):
     """
-    Load a longitudinally ordered ABCD dataset.
+    Load a longitudinally ordered ABCD MRI dataset.
     * fcon: Gordon network correlations
     * scon: DTI atlas tract fractional anisotropy averages
 
     Params:
         abcd_path: ABCD dataset directory
-        data: dataset to load
-        dropna: drop subject if any column is NA
-        include_rec: [fcon, scon] Filter by recommended inclusion?
-        exclude_n: [fcon] Ignore None "network"?
+        data_type: type of dataset to load
+        dropna: drop subject if any dataset column is NA
+        include_rec: filter by recommended inclusion?
+        exclude_n: [fcon] ignore None "network"?
 
     Returns:
         dataset: DataFrame indexed and sorted by (subject, event)
         extra: DataFrame of relevant supplementary data
             * fcon, scon: mean motion
     """
-    if data == 'fcon':
+    # read tabulated data
+    if data_type == 'fcon':
         filename = 'abcd_betnet02.tsv'
-    elif data == 'scon':
+    elif data_type == 'scon':
         filename = 'abcd_dti_p101.tsv'
     else:
-        raise ValueError('Unknown dataset ' + data)
+        raise ValueError('Unknown dataset type ' + data)
 
-    raw = pd.read_csv(os.path.join(abcd_path, filename), sep='\t',
-                      skiprows=[1], index_col=INDEX)
-    raw = raw.loc[~raw.index.duplicated(keep='last')]
+    data = pd.read_csv(os.path.join(abcd_path, filename), sep='\t',
+                       skiprows=[1], index_col=INDEX)
 
     # columns
-    if data == 'fcon':
+    if data_type == 'fcon':
         fcon_codes = list(FCON.keys())
         if exclude_n:
             fcon_codes.remove('n')
@@ -67,43 +70,45 @@ def load_data(abcd_path, data, dropna=False, include_rec=None, exclude_n=None):
                 columns.append(FCON_TEMPLATE.format(fcon_codes[i], fcon_codes[j]))
 
         extra_columns = ['rsfmri_c_ngd_meanmotion']
-    elif data == 'scon':
-        columns = raw.columns.str.startswith(SCON_TEMPLATE.format(''))
+    elif data_type == 'scon':
+        columns = data.columns.str.startswith(SCON_TEMPLATE.format(''))
 
         extra_columns = ['dmri_dti_meanmotion']
-    else:
-        columns = slice(None)
 
-        extra_columns = []
-
-    raw_cols = raw.loc[:, columns]
+    data_cols = data.loc[:, columns]
 
     # rows
     if include_rec:
         imgincl = pd.read_csv(os.path.join(abcd_path, 'abcd_imgincl01.tsv'), sep='\t',
                               skiprows=[1], index_col=INDEX)
         imgincl = imgincl.dropna(subset=['visit'])
+        # NOTE has identical duplicate rows for whatever reason
         imgincl = imgincl.loc[~imgincl.index.duplicated(keep='last')]
 
-        if data == 'fcon':
+        if data_type == 'fcon':
             inclusion = imgincl.loc[imgincl['imgincl_rsfmri_include'] == 1].index
-        elif data == 'scon':
+        elif data_type == 'scon':
             inclusion = imgincl.loc[imgincl['imgincl_dmri_include'] == 1].index
-        else:
-            raise ValueError('No recommended inclusion for ' + data)
 
-        included = raw_cols.loc[inclusion, :]
+        included = data_cols.loc[inclusion, :]
     else:
-        included = raw_cols
+        included = data_cols
 
     if dropna:
         included = included.dropna()
 
     subs_included = included.groupby(level=0).size()
     subs_long = subs_included.index[subs_included == len(EVENTS)]
+    dataset = data.loc[idx[subs_long, EVENTS], columns]
 
-    dataset = raw.loc[idx[subs_long, EVENTS], columns]
-    extra = raw.loc[dataset.index, extra_columns]
+    # extra
+    mri = pd.read_csv(os.path.join(abcd_path, 'abcd_mri01.tsv'), sep='\t',
+                      skiprows=[1], index_col=INDEX)
+    # NOTE has empty duplicate rows for whatever reason
+    mri = mri.dropna(how='all', subset=SCAN_INFO)
+
+    extra = data.loc[dataset.index, extra_columns].join(mri[SCAN_INFO])
+
     return dataset, extra
 
 
