@@ -1,0 +1,14 @@
+name: StructFunc
+channels:
+  - conda-forge
+dependencies:
+  - pandas
+  - nilearn
+  - statsmodels
+  - seaborn
+  - pandas-plink
+  - rpy2
+  - r-pma
+  - pip
+  - pip:
+    - mapply
