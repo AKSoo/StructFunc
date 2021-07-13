@@ -29,13 +29,15 @@ covariates['sex'] = dem_long['sex'].astype('category')
 covariates['site_id'] = dem_site['site_id_l']
 
 def combine_dems(dems, na_values=None):
-    combined = reduce(lambda l,r: l.combine_first(r), [
-        dem.replace(na_values, np.nan) for dem in dems
-    ])
+    combined = reduce(
+        lambda l,r: l.combine_first(r),
+        [dem.replace(na_values, np.nan) for dem in dems]
+    )
     return combined
 
 # income
-comb_income = combine_dems([dem_base['demo_comb_income_v2'], dem_long['demo_comb_income_v2_l']],
+comb_income = combine_dems([dem_base['demo_comb_income_v2'],
+                            dem_long['demo_comb_income_v2_l']],
                            na_values=NA_VALUES)
 
 def map_income_3level(x):
@@ -51,10 +53,12 @@ def map_income_3level(x):
 covariates['comb_income.3level'] = comb_income.apply(map_income_3level).astype('category')
 
 # education
-prnt_ed = combine_dems([dem_base['demo_prnt_ed_v2'], dem_long['demo_prnt_ed_v2_l'],
+prnt_ed = combine_dems([dem_base['demo_prnt_ed_v2'],
+                        dem_long['demo_prnt_ed_v2_l'],
                         dem_long['demo_prnt_ed_v2_2yr_l']],
                        na_values=NA_VALUES)
-prtnr_ed = combine_dems([dem_base['demo_prtnr_ed_v2'], dem_long['demo_prtnr_ed_v2_l'],
+prtnr_ed = combine_dems([dem_base['demo_prtnr_ed_v2'],
+                         dem_long['demo_prtnr_ed_v2_l'],
                          dem_long['demo_prtnr_ed_v2_2yr_l']],
                         na_values=NA_VALUES)
 highest_ed = prnt_ed.fillna(-1).combine(prtnr_ed.fillna(-1), max)
@@ -76,7 +80,8 @@ def map_ed_5level(x):
 covariates['highest_ed.5level'] = highest_ed.apply(map_ed_5level).astype('category')
 
 # marital
-marital = combine_dems([dem_base['demo_prnt_marital_v2'], dem_long['demo_prnt_marital_v2_l']],
+marital = combine_dems([dem_base['demo_prnt_marital_v2'],
+                        dem_long['demo_prnt_marital_v2_l']],
                        na_values=NA_VALUES)
 
 def map_marital(x):
@@ -93,8 +98,10 @@ covariates['married'] = marital.apply(map_marital).astype('category')
 white = dem_base['demo_race_a_p___10']
 black = dem_base['demo_race_a_p___11']
 aian = dem_base['demo_race_a_p___12'] | dem_base['demo_race_a_p___13']
-nhpi = reduce(lambda l,r: l | r, [dem_base['demo_race_a_p___' + str(n)] for n in range(14,18)])
-asian = reduce(lambda l,r: l | r, [dem_base['demo_race_a_p___' + str(n)] for n in range(18,25)])
+nhpi = reduce(lambda l,r: l | r,
+              [dem_base['demo_race_a_p___' + str(n)] for n in range(14,18)])
+asian = reduce(lambda l,r: l | r,
+               [dem_base['demo_race_a_p___' + str(n)] for n in range(18,25)])
 other = dem_base['demo_race_a_p___25']
 mixed = white + black + asian + aian + nhpi + other > 1
 
@@ -112,8 +119,9 @@ covariates = covariates.join(dem_base['demo_ethn_v2'].map({1:'Yes', 2:'No'}).ren
                              .droplevel('eventname').astype('category'))
 
 # family ID
-covariates = covariates.join(dem_acs.xs('baseline_year_1_arm_1', level='eventname')['rel_family_id']
-                             .astype(int))
+covariates = covariates.join(
+    dem_acs.xs('baseline_year_1_arm_1', level='eventname')['rel_family_id'].astype(int)
+)
 
 # OUTPUTS
 covariates.to_csv('outputs/abcd_covariates.csv')
