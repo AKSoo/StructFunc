@@ -1,4 +1,7 @@
-# Project <insert name>
+# Project StructFunc
+
+1. Find longitudinal structural to functional connectivity associations
+2. Predict functional connectivity
 
 ## Dataset structure
 
