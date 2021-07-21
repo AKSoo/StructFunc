@@ -1,0 +1,4 @@
+[submodule "inputs/ABCD"]
+	path = inputs/ABCD
+	url = /home/kimsin98/ABCD
+	datalad-id = 960e3aac-cdf8-4117-858e-815ab490c00d
