@@ -8,18 +8,17 @@ from functools import reduce
 
 from utils import abcd
 
-ABCD_DIR = Path('inputs/ABCD')
 NA_VALUES = [777, 999]
 
 
 # INPUTS
-dem_long = pd.read_csv(ABCD_DIR / 'abcd_lpds01.tsv', sep='\t',
+dem_long = pd.read_csv(abcd.PATH / 'abcd_lpds01.tsv', sep='\t',
                        skiprows=[1], index_col=abcd.INDEX)
-dem_site = pd.read_csv(ABCD_DIR / 'abcd_lt01.tsv', sep='\t',
+dem_site = pd.read_csv(abcd.PATH / 'abcd_lt01.tsv', sep='\t',
                        skiprows=[1], index_col=abcd.INDEX)
-dem_base = pd.read_csv(ABCD_DIR / 'pdem02.tsv', sep='\t',
+dem_base = pd.read_csv(abcd.PATH / 'pdem02.tsv', sep='\t',
                        skiprows=[1], index_col=abcd.INDEX)
-dem_acs = pd.read_csv(ABCD_DIR / 'acspsw03.tsv', sep='\t',
+dem_acs = pd.read_csv(abcd.PATH / 'acspsw03.tsv', sep='\t',
                       skiprows=[1], index_col=abcd.INDEX)
 
 # start aggregate
@@ -124,4 +123,4 @@ covariates = covariates.join(
 )
 
 # OUTPUTS
-covariates.to_csv('outputs/abcd_covariates.csv')
+covariates.to_csv(abcd.OUTPUT / 'abcd_covariates.csv')
