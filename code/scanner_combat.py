@@ -18,7 +18,7 @@ def save_scan_combat(filename, con, extra, scan_confounds):
     batch = extra[scan_confounds].apply(tuple, axis=1)
     covars = extra[['meanmotion']].join(covariates)
     adjusted = combat(con, batch, covars, n_procs=4)
-    adjusted.to_csv(abcd.OUTPUT / filename)
+    adjusted.to_csv(abcd.OUT_PATH / filename)
 
 save_scan_combat('fcon-device.csv', fcon, fc_extra,
                  ['mri_info_deviceserialnumber'])

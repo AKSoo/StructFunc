@@ -123,4 +123,4 @@ covariates = covariates.join(
 )
 
 # OUTPUTS
-covariates.to_csv(abcd.OUTPUT / 'abcd_covariates.csv')
+covariates.to_csv(abcd.OUT_PATH / 'abcd_covariates.csv')
