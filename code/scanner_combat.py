@@ -11,8 +11,8 @@ from utils.combat import combat
 covariates = abcd.load_covariates(covars=['interview_age', 'sex', 'hisp'],
                                   simple_race=True)
 
-fcon, fc_extra = abcd.load_mri_data('fcon', dropna=True)
-scon, sc_extra = abcd.load_mri_data('scon', dropna=True)
+fcon, fc_extra = abcd.load_fcon(dropna=True)
+scon, sc_extra = abcd.load_scon(dropna=True)
 
 def save_scan_combat(filename, con, extra, scan_confounds):
     batch = extra[scan_confounds].apply(tuple, axis=1)
