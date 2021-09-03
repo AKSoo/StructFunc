@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import warnings
+warnings.simplefilter('ignore', category=FutureWarning)
+warnings.simplefilter('ignore', category=UserWarning)
+
 import pandas as pd
 idx = pd.IndexSlice
 SEED = 69
@@ -30,9 +34,17 @@ out = ['all', 'noout']
 
 verses = ['-'.join(c) for c in product(shell, covar, scan, metric, out)]
 
-def analyze(verse):
-    (out_path / verse).mkdir(parents=True, exist_ok=True)
+def verse_inputs(verse, test=False):
+    """
+    Parse experiment verse name and get analysis inputs. 
 
+    Params:
+        verse: str experiment settings
+        test: or train?
+
+    Returns:
+        dFC, SC, FC, FCSC: ndarrays
+    """
     # parse params
     params = verse.split('-')
     full = params[0] == 'full'
@@ -57,8 +69,12 @@ def analyze(verse):
     subs = fcon.index.get_level_values(0).unique()
 
     # train-test split
-    subs_train, _ = train_test_split(subs, test_size=.2, random_state=SEED)
-    fc, sc = fcon.loc[subs_train], scon.loc[subs_train]
+    subs_train, subs_test = train_test_split(subs, test_size=.2, random_state=SEED)
+    if test:
+        subs = subs_test
+    else:
+        subs = subs_train
+    fc, sc = fcon.loc[subs], scon.loc[subs]
 
     # outlier
     if noout:
@@ -92,6 +108,18 @@ def analyze(verse):
         SC = imputer.fit_transform(SC)
         FC = imputer.fit_transform(FC)
         FCSC = imputer.fit_transform(FCSC)
+    else:
+        dFC = dFC.to_numpy()
+        SC = SC.to_numpy()
+        FC = FC.to_numpy()
+        FCSC = FCSC.to_numpy()
+
+    return dFC, SC, FC, FCSC
+
+def scca_analysis(verse):
+    (out_path / verse).mkdir(parents=True, exist_ok=True)
+
+    dFC, SC, FC, FCSC = verse_inputs(verse)
 
     # sCCA
     scca_SC = SparseCCA(n_components=10, scale=True)
@@ -110,6 +138,8 @@ def analyze(verse):
     return summary
 
 
-summary = joblib.Parallel(n_jobs=8)(joblib.delayed(analyze)(v) for v in verses)
-summary = pd.DataFrame(summary, index=verses, columns=['SC', 'FC', 'FCSC'])
-summary.to_csv(out_path / 'summary.csv')
+if __name__ == '__main__':
+    summary = joblib.Parallel(n_jobs=8)(joblib.delayed(scca_analysis)(v)
+                                        for v in verses)
+    summary = pd.DataFrame(summary, index=verses, columns=['SC', 'FC', 'FCSC'])
+    summary.to_csv(out_path / 'summary.csv')
