@@ -136,8 +136,7 @@ def scca_analysis(verse):
     scca_FCSC.fit(FCSC, dFC)
     joblib.dump(scca_FCSC, out_path / verse / 'scca_FCSC.joblib.gz')
 
-    summary = (scca_SC.corrs_.max(), scca_FC.corrs_.max(), scca_FCSC.corrs_.max())
-    return summary
+    return scca_SC.corrs_.max(), scca_FC.corrs_.max(), scca_FCSC.corrs_.max()
 
 
 if __name__ == '__main__':
