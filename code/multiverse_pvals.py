@@ -15,7 +15,8 @@ from utils import permutation
 import multiverse_sCCA
 
 
-def scca_pvals(verse, n_perm=4999, n_procs=1, test=False):
+def scca_pvals(verse, n_perm=4999, test=False,
+               random_state=SEED, n_procs=1):
     dFC, SC, _, _ = multiverse_sCCA.verse_inputs(verse, test=test)
     scca = joblib.load(multiverse_sCCA.out_path / verse / 'scca_SC.joblib.gz')
 
@@ -26,7 +27,7 @@ def scca_pvals(verse, n_perm=4999, n_procs=1, test=False):
         return tmp_scca.corrs_[0]
 
     distrib = permutation.permute_func(quick_scca, SC, dFC, n_perm=n_perm,
-                                       random_state=SEED, n_procs=n_procs)
+                                       random_state=random_state, n_procs=n_procs)
     p = ((distrib >= scca.corrs_.max()).sum() + 1) / (len(distrib) + 1)
     return p
 

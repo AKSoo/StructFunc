@@ -34,7 +34,7 @@ out = ['all', 'noout']
 
 verses = ['-'.join(c) for c in product(shell, covar, scan, metric, out)]
 
-def verse_inputs(verse, test=False):
+def verse_inputs(verse, test=False, random_state=SEED):
     """
     Parse experiment verse name and get analysis inputs. 
 
@@ -64,12 +64,14 @@ def verse_inputs(verse, test=False):
     scon = combat.combat(scon, sc_extra[scan_confounds].apply(tuple, axis=1), sc_covariates)
 
     # sample 1 per family
-    fcon = abcd.filter_siblings(fcon.loc[fcon.index.intersection(scon.index)], random_state=SEED)
+    fcon = abcd.filter_siblings(fcon.loc[fcon.index.intersection(scon.index)],
+                                random_state=random_state)
     scon = scon.loc[fcon.index]
     subs = fcon.index.get_level_values(0).unique()
 
     # train-test split
-    subs_train, subs_test = train_test_split(subs, test_size=.2, random_state=SEED)
+    subs_train, subs_test = train_test_split(subs, test_size=.2,
+                                             random_state=random_state)
     if test:
         subs = subs_test
     else:
