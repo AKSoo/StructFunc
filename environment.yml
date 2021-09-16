@@ -2,15 +2,12 @@ name: StructFunc
 channels:
   - conda-forge
 dependencies:
-  - ipykernel
-  - ipywidgets
   - pandas
   - nilearn
   - statsmodels
   - seaborn
   - rpy2
   - r-pma
-  - pandas-plink
   - pip
   - pip:
     - mapply
