@@ -3,3 +3,8 @@
 	url = /home/kimsin98/ABCD
 	datalad-id = 960e3aac-cdf8-4117-858e-815ab490c00d
 	datalad-url = /home/kimsin98/ABCD
+[submodule "code/utils"]
+	path = code/utils
+	url = git@github.com:AKSoo/abcd_utils.git
+	datalad-id = 053dbfd1-10f5-4e91-942d-79f6f3b9fecd
+	datalad-url = git@github.com:AKSoo/abcd_utils.git
