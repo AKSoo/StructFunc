@@ -15,7 +15,7 @@ and Change in Functional Connectivity**
 
 ## Directory Structure
 
-* ABCD dataset should be placed in `inputs/`.
+* ABCD dataset should be placed in `inputs/ABCD/`.
 * All code is located in `code/`.
 * Scripts will save outputs to `outputs/`.
 
