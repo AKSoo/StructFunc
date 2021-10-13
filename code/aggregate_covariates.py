@@ -11,13 +11,13 @@ NA_VALUES = [777, 999]
 
 
 # INPUTS
-dem_long = pd.read_csv(abcd.PATH / 'abcd_lpds01.tsv', sep='\t',
+dem_long = pd.read_csv(abcd.PATH / 'abcd_lpds01.txt', sep='\t',
                        skiprows=[1], index_col=abcd.INDEX)
-dem_site = pd.read_csv(abcd.PATH / 'abcd_lt01.tsv', sep='\t',
+dem_site = pd.read_csv(abcd.PATH / 'abcd_lt01.txt', sep='\t',
                        skiprows=[1], index_col=abcd.INDEX)
-dem_base = pd.read_csv(abcd.PATH / 'pdem02.tsv', sep='\t',
+dem_base = pd.read_csv(abcd.PATH / 'pdem02.txt', sep='\t',
                        skiprows=[1], index_col=abcd.INDEX)
-dem_acs = pd.read_csv(abcd.PATH / 'acspsw03.tsv', sep='\t',
+dem_acs = pd.read_csv(abcd.PATH / 'acspsw03.txt', sep='\t',
                       skiprows=[1], index_col=abcd.INDEX)
 
 # start aggregate
