@@ -5,6 +5,7 @@ import warnings
 warnings.simplefilter('ignore', category=FutureWarning)
 warnings.simplefilter('ignore', category=UserWarning)
 
+from pathlib import Path
 import pandas as pd
 idx = pd.IndexSlice
 SEED = 69
@@ -21,7 +22,7 @@ from itertools import product
 from utils import abcd, combat, residual
 
 
-out_path = abcd.OUT_PATH / 'multiverse'
+out_path = Path('outputs/multiverse')
 
 covariates = abcd.load_covariates(covars=['interview_age', 'sex', 'hisp'],
                                   simple_race=True)
